@@ -1,0 +1,51 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'java'
+}
+
+group 'org.embeddedt'
+archivesBaseName = 'blacksmith'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    maven { url = "https://maven.minecraftforge.net" }
+}
+
+shadowJar {
+    relocate 'net.bytebuddy.agent', 'org.embeddedt.blacksmith.shadow.bytebuddyagent'
+}
+
+shadowJar {
+    project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.implementation]
+}
+
+dependencies {
+    compileOnly("cpw.mods:modlauncher:5.1.2")
+    compileOnly('org.apache.logging.log4j:log4j-api:2.11.2')
+    compileOnly('org.apache.logging.log4j:log4j-core:2.11.2')
+    implementation('net.bytebuddy:byte-buddy-agent:1.12.22')
+}
+
+jar {
+    manifest {
+        attributes(
+                "Premain-Class": "org.embeddedt.blacksmith.impl.Agent",
+                "Can-Redefine-Classes": false,
+                "Can-Set-Native-Method-Prefix": false
+        )
+    }
+}
+
+shadowJar {
+    archiveBaseName.set('blacksmith')
+    archiveClassifier.set('')
+    archiveVersion.set('v1')
+}
+
+project.tasks.shadowJar.dependsOn build
+defaultTasks 'shadowJar'
