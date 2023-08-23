@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.ProtectionDomain;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,7 +33,11 @@ public class TransformerCore {
     }
 
     public static void log(String s) {
-        System.out.println("[Blacksmith] " + s);
+        System.out.printf("[%1$tT] [%2$s/INFO] [Blacksmith]: %3$s %n",
+                new Date(),
+                Thread.currentThread().getName(),
+                s
+        );
     }
 
     @SuppressWarnings("unused")
