@@ -1,9 +1,6 @@
 package org.embeddedt.blacksmith.impl;
 
-import org.embeddedt.blacksmith.impl.transformers.FMLScannerTransformer;
-import org.embeddedt.blacksmith.impl.transformers.LaunchClassLoaderTransformer;
-import org.embeddedt.blacksmith.impl.transformers.RuntimeTransformer;
-import org.embeddedt.blacksmith.impl.transformers.SJHJarTransformer;
+import org.embeddedt.blacksmith.impl.transformers.*;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -30,6 +27,7 @@ public class TransformerCore {
     static {
         TRANSFORMERS.add(new FMLScannerTransformer());
         TRANSFORMERS.add(new SJHJarTransformer());
+        TRANSFORMERS.add(new AbstractModProviderTransformer());
         TRANSFORMERS.add(new LaunchClassLoaderTransformer());
     }
 
