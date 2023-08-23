@@ -37,17 +37,22 @@ public class SJHJarTransformer implements RuntimeTransformer {
         } else if(data.name.equals("cpw/mods/jarhandling/impl/Jar")) {
             for(MethodNode method : data.methods) {
                 if (method.name.equals("getPackages")) {
-                    for (AbstractInsnNode insn : method.instructions) {
-                        if (insn.getOpcode() == Opcodes.INVOKESTATIC) {
+                    AbstractInsnNode insn = method.instructions.getFirst();
+                    do {
+                        if (insn.getOpcode() == Opcodes.INVOKESTATIC || insn.getOpcode() == Opcodes.INVOKEINTERFACE || insn.getOpcode() == Opcodes.INVOKEVIRTUAL) {
                             MethodInsnNode invokeNode = (MethodInsnNode) insn;
                             if (invokeNode.owner.equals("java/nio/file/Files") && invokeNode.name.equals("walk")) {
                                 // replace
                                 System.out.println("Changed Jar#getPackages() to skip scanning assets & data");
-                                method.instructions.set(insn, RuntimeTransformer.redirectToStaticHook("getPackagesSkippingAssets", "(Ljava/nio/file/Path;[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"));
+                                insn = RuntimeTransformer.swapInstruction(method.instructions, insn, RuntimeTransformer.redirectToStaticHook("getPackagesSkippingAssets", "(Ljava/nio/file/Path;[Ljava/nio/file/FileVisitOption;)Ljava/util/stream/Stream;"));
+                            } else if (invokeNode.owner.equals("java/util/stream/Stream") && invokeNode.name.equals("filter")) {
+                                System.out.println("Removing filter() call");
+                                insn = RuntimeTransformer.swapInstruction(method.instructions, insn, RuntimeTransformer.redirectToStaticHook("dummyFilter", "(Ljava/util/stream/Stream;Ljava/util/function/Predicate;)Ljava/util/stream/Stream;"));
+                            } else if (invokeNode.owner.equals("java/util/stream/Stream") && invokeNode.name.equals("map"))
                                 break;
-                            }
                         }
-                    }
+                        insn = insn.getNext();
+                    } while(insn != null);
                 }
             }
         }

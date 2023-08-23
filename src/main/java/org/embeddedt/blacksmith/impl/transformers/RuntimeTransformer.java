@@ -1,7 +1,9 @@
 package org.embeddedt.blacksmith.impl.transformers;
 
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodInsnNode;
 
 import java.lang.instrument.IllegalClassFormatException;
@@ -15,5 +17,10 @@ public interface RuntimeTransformer {
 
     static MethodInsnNode redirectToStaticHook(String hookName, String hookDesc) {
         return new MethodInsnNode(Opcodes.INVOKESTATIC, "org/embeddedt/blacksmith/impl/hooks/Hooks", hookName, hookDesc, false);
+    }
+
+    static <T extends AbstractInsnNode> T swapInstruction(InsnList list, AbstractInsnNode oldInsn, T newInsn) {
+        list.set(oldInsn, newInsn);
+        return newInsn;
     }
 }

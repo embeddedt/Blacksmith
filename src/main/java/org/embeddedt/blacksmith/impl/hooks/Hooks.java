@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 import java.util.stream.Stream;
@@ -32,12 +33,16 @@ public class Hooks {
         return Arrays.stream(array).parallel();
     }
 
+    public static <T> Stream<T> dummyFilter(Stream<T> stream, Predicate<T> filter) {
+        return stream;
+    }
+
     public static Stream<Path> getPackagesSkippingAssets(Path basePath, FileVisitOption[] options) throws IOException {
         List<Path> validPaths = new ArrayList<>();
         Files.walkFileTree(basePath, new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-                if(attrs.isRegularFile())
+                if(file.getFileName().toString().endsWith(".class") && attrs.isRegularFile())
                     validPaths.add(file);
                 return FileVisitResult.CONTINUE;
             }
