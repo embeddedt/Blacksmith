@@ -10,12 +10,14 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 targetCompatibility = '1.8'
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-    maven {
-        name = 'forge'
-        url = 'https://maven.neoforged.net/'
+allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            name = 'forge'
+            url = 'https://maven.neoforged.net/'
+        }
     }
 }
 
@@ -51,8 +53,6 @@ tasks.withType(JavaCompile) {
     options.encoding = "UTF-8"
 }
 
-
-
 jar {
     manifest {
         attributes(
@@ -61,6 +61,7 @@ jar {
                 "Can-Set-Native-Method-Prefix": false
         )
     }
+    from project(":java17").sourceSets.main.output
 }
 
 shadowJar {
