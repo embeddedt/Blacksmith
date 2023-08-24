@@ -1,5 +1,7 @@
 package org.embeddedt.blacksmith.impl.modules;
 
+import sun.misc.Unsafe;
+
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -11,8 +13,6 @@ import java.util.stream.Stream;
 /**
  * Includes a faster implementation of resolveAndBind that does not suffer from bad time complexity with many
  * automatic modules. Written by Technici4n, permission granted to include in Blacksmith under LGPL3.
- *
- * Currently needs --add-opens java.base/java.lang.invoke=ALL-UNNAMED.
  */
 public class ConfigurationUtil {
     private static final MethodHandle MODULE_DESCRIPTOR__AUTOMATIC__SETTER;
@@ -23,8 +23,12 @@ public class ConfigurationUtil {
     static {
         try {
             var hackfield = MethodHandles.Lookup.class.getDeclaredField("IMPL_LOOKUP");
-            hackfield.setAccessible(true);
-            MethodHandles.Lookup hack = (MethodHandles.Lookup) hackfield.get(null);
+            var f = Unsafe.class.getDeclaredField("theUnsafe");
+            f.setAccessible(true);
+            Unsafe unsafe = (Unsafe)f.get(null);
+            long offset = unsafe.staticFieldOffset(hackfield);
+            Object base = unsafe.staticFieldBase(hackfield);
+            MethodHandles.Lookup hack = (MethodHandles.Lookup) unsafe.getObject(base, offset);
 
             MODULE_DESCRIPTOR__AUTOMATIC__SETTER = hack.findSetter(ModuleDescriptor.class, "automatic", boolean.class);
             MODULE_DESCRIPTOR__PROVIDES__SETTER = hack.findSetter(ModuleDescriptor.class, "provides", Set.class);
