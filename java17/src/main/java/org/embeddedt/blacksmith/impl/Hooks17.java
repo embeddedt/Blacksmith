@@ -6,7 +6,6 @@ import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 public class Hooks17 {
     private static final boolean DEBUG = true;
