@@ -26,7 +26,28 @@ public class FMLScannerTransformer implements RuntimeTransformer {
                             System.out.println("Found accept()");
                             //Agent.LOGGER.info(SELF, "Successfully patched Scanner to skip reading unnecessary data");
                             method.instructions.set(minsn.getPrevious(), new LdcInsnNode(ClassReader.SKIP_CODE | ClassReader.SKIP_DEBUG | ClassReader.SKIP_FRAMES));
-                            return;
+                            break;
+                        }
+                    }
+                }
+            } else if(method.name.equals("scan")) {
+                for(int i = 0; i < method.instructions.size(); i++) {
+                    AbstractInsnNode ainsn = method.instructions.get(i);
+                    if(ainsn.getOpcode() == Opcodes.INVOKEVIRTUAL) {
+                        MethodInsnNode minsn = (MethodInsnNode)ainsn;
+                        if(minsn.name.equals("scanFile")) {
+                            System.out.println("Wrapped scanner");
+                            minsn.setOpcode(Opcodes.INVOKESTATIC);
+                            minsn.owner = "org/embeddedt/blacksmith/impl/hooks/ForgeHooks";
+                            minsn.name = "doScanning";
+                            minsn.desc = "(Ljava/lang/Object;Ljava/util/function/Consumer;)V";
+                            InsnList after = new InsnList();
+                            after.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                            after.add(new FieldInsnNode(Opcodes.GETFIELD, "net/minecraftforge/fml/loading/moddiscovery/Scanner", "fileToScan", "Lnet/minecraftforge/fml/loading/moddiscovery/ModFile;"));
+                            after.add(new VarInsnNode(Opcodes.ALOAD, 1));
+                            after.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/embeddedt/blacksmith/impl/hooks/ForgeHooks", "postScanning", "(Ljava/lang/Object;Lnet/minecraftforge/forgespi/language/ModFileScanData;)V"));
+                            method.instructions.insert(minsn, after);
+                            break;
                         }
                     }
                 }
