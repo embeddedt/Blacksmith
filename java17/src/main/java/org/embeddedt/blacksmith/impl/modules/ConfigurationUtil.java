@@ -15,6 +15,7 @@ import java.util.stream.Stream;
  */
 public class ConfigurationUtil {
     private static final MethodHandle MODULE_DESCRIPTOR__AUTOMATIC__SETTER;
+    private static final MethodHandle MODULE_DESCRIPTOR__PROVIDES__SETTER;
     private static final MethodHandle CONFIGURATION__GRAPH__GETTER;
 
     static {
@@ -24,6 +25,7 @@ public class ConfigurationUtil {
             MethodHandles.Lookup hack = (MethodHandles.Lookup) hackfield.get(null);
 
             MODULE_DESCRIPTOR__AUTOMATIC__SETTER = hack.findSetter(ModuleDescriptor.class, "automatic", boolean.class);
+            MODULE_DESCRIPTOR__PROVIDES__SETTER = hack.findSetter(ModuleDescriptor.class, "provides", Set.class);
             CONFIGURATION__GRAPH__GETTER = hack.findGetter(Configuration.class, "graph", Map.class);
         } catch (Exception e) {
             throw new RuntimeException("Failed to collect method handles", e);
@@ -35,11 +37,14 @@ public class ConfigurationUtil {
 
         // Temporarily disable automatic flag for faster resolution
         setAutomatic(automaticModules, false);
+        // We need to clear the provides flag to avoid export checks for provided packages (which might fail due to service-providing modules being unreadable at resolution time).
+        var savedProvides = clearProvides(automaticModules);
 
         var conf = Configuration.resolveAndBind(before, parents, after, roots);
 
-        // Restore automatic flag
+        // Restore
         setAutomatic(automaticModules, true);
+        restoreProvides(savedProvides);
 
         // Readability graph
         Map<ResolvedModule, Set<ResolvedModule>> g1 = getReadabilityGraph(conf);
@@ -87,6 +92,29 @@ public class ConfigurationUtil {
         });
     }
 
+    private static Map<ModuleDescriptor, Set<ModuleDescriptor.Provides>> clearProvides(Set<ModuleDescriptor> modules) {
+        Map<ModuleDescriptor, Set<ModuleDescriptor.Provides>> ret = new IdentityHashMap<>();
+        modules.forEach(m -> {
+            ret.put(m, m.provides());
+            try {
+                MODULE_DESCRIPTOR__PROVIDES__SETTER.invoke(m, Set.of());
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return ret;
+    }
+
+    private static void restoreProvides(Map<ModuleDescriptor, Set<ModuleDescriptor.Provides>> map) {
+        map.forEach((m, provides) -> {
+            try {
+                MODULE_DESCRIPTOR__PROVIDES__SETTER.invoke(m, provides);
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
     private static Map<ResolvedModule, Set<ResolvedModule>> getReadabilityGraph(Configuration conf) {
         try {
             return (Map<ResolvedModule, Set<ResolvedModule>>) CONFIGURATION__GRAPH__GETTER.invoke(conf);
@@ -97,9 +125,13 @@ public class ConfigurationUtil {
 
     public static String dumpConfiguration(Configuration conf) {
         StringBuilder sb = new StringBuilder("Dumping configuration\n");
-        conf.modules().stream().sorted(Comparator.comparing(ResolvedModule::name)).forEach(m -> {
+        List<ResolvedModule> modList = new ArrayList<>(conf.modules());
+        modList.sort(Comparator.comparing(ResolvedModule::name));
+        modList.forEach(m -> {
             sb.append(m.name()).append(" with descriptor ").append(m.reference().descriptor()).append('\n');
-            sb.append("  reads: ").append(m.reads().stream().map(ResolvedModule::name).sorted().collect(Collectors.joining(","))).append('\n');
+            List<String> reads = m.reads().stream().map(ResolvedModule::name).collect(Collectors.toCollection(ArrayList::new));
+            reads.sort(Comparator.naturalOrder());
+            sb.append("  reads: ").append(String.join(",", reads)).append('\n');
         });
         return sb.toString();
     }
