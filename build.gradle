@@ -16,11 +16,17 @@ allprojects {
     version '1.0-SNAPSHOT'
 }
 
+configurations {
+    jij {
+        transitive false
+    }
+}
+
 project.configurations.implementation.canBeResolved = true
 
 dependencies {
     implementation project(path: ":main", configuration: 'shadow')
-    implementation project(":java17")
+    jij project(":java17")
     implementation project(":launchwrapper")
 }
 
@@ -39,8 +45,26 @@ shadowJar {
     configurations = [project.configurations.implementation]
 }
 
+task shadowBugWorkaround(type: Jar) {
+    dependsOn jar
+    dependsOn tasks.getByPath(':java17:jar')
+    destinationDir file('build/shadow-bug-workaround')
+    baseName = 'nested-content'
+    from jar
+    from tasks.getByPath(':java17:jar')
+}
+
+shadowJar {
+    dependsOn shadowBugWorkaround
+    exclude 'META-INF/**'
+    from 'extras'
+    // Shadow plugin bug: explodes the nested jar.
+    //from tasks.getByPath(':annotation:jar')
+    // Workaround: double-nest the jar.
+    from shadowBugWorkaround
+}
+assemble.dependsOn shadowJar
+
 shadowJar {
     archiveClassifier.set('')
 }
-
-jar.finalizedBy(shadowJar)

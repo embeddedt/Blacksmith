@@ -1,9 +1,13 @@
 plugins {
-    id 'java'
+    id 'java-library'
 }
 
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(17)
+}
+
+jar {
+    archiveName 'java17.jar'
 }
 
 dependencies {

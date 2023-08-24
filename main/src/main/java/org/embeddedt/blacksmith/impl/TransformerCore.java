@@ -6,11 +6,13 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.lang.instrument.Instrumentation;
+import java.net.JarURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -19,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.jar.JarFile;
 
 public class TransformerCore {
     private static final List<RuntimeTransformer> TRANSFORMERS = new ArrayList<>();
@@ -32,6 +35,7 @@ public class TransformerCore {
         TRANSFORMERS.add(new LaunchClassLoaderTransformer());
         TRANSFORMERS.add(new LaunchTransformer());
         TRANSFORMERS.add(new FinalFieldHelperTransformer());
+        TRANSFORMERS.add(new ModuleLayerHandlerTransformer());
     }
 
     public static void log(String s) {
@@ -42,10 +46,43 @@ public class TransformerCore {
         );
     }
 
+    /* borrowed from Commons */
+    static long copyLarge(final InputStream inputStream, final OutputStream outputStream)
+            throws IOException {
+        byte[] buffer = new byte[1024];
+        long count = 0;
+        int n;
+        while (-1 != (n = inputStream.read(buffer))) {
+            outputStream.write(buffer, 0, n);
+            count += n;
+        }
+        return count;
+    }
+
+    static void loadJ17Jar(Instrumentation instrumentation) {
+        try(InputStream j17Jar = TransformerCore.class.getResourceAsStream("/java17.jar")) {
+            if(j17Jar == null) {
+                System.out.println("UNABLE TO LOAD JAVA 17 MODULE!!!");
+                return;
+            }
+            final File tempFile = File.createTempFile("blacksmith", ".jar");
+            tempFile.deleteOnExit();
+            try (FileOutputStream out = new FileOutputStream(tempFile)) {
+                copyLarge(j17Jar, out);
+            }
+            JarFile j17File = new JarFile(tempFile);
+            instrumentation.appendToBootstrapClassLoaderSearch(j17File);
+            System.out.println("Injected Java 17 module " + tempFile);
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     @SuppressWarnings("unused")
     public static void start(Instrumentation instrumentation) {
         log("Loaded on separate classloader");
         instrumentation.addTransformer(new AgentTransformer());
+        loadJ17Jar(instrumentation);
     }
 
     private static class AgentTransformer implements ClassFileTransformer {
@@ -80,7 +117,7 @@ public class TransformerCore {
         @Override
         public byte[] transform(ClassLoader classLoader, String s, Class<?> aClass, ProtectionDomain protectionDomain, byte[] bytes) throws IllegalClassFormatException {
             List<RuntimeTransformer> transformers = transformersByClass.get(s);
-            if(transformers == null)
+            if(transformers == null || transformers.isEmpty())
                 return bytes;
             log("transforming " + s);
             try {
@@ -97,7 +134,7 @@ public class TransformerCore {
                 byte[] data = writer.toByteArray();
                 if(DEBUG) dumpDebugClass(s, data);
                 return data;
-            } catch(RuntimeException e) {
+            } catch(Throwable e) {
                 e.printStackTrace();
                 return bytes;
             }

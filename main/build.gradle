@@ -27,6 +27,7 @@ tasks.withType(JavaCompile) {
 shadowJar {
     relocate 'net.bytebuddy.agent', 'org.embeddedt.blacksmith.shadow.bytebuddyagent'
     relocate 'org.objectweb.asm', 'org.embeddedt.blacksmith.shadow.asm'
+    relocate 'com.google.gson', 'org.embeddedt.blacksmith.shadow.gson'
 }
 
 shadowJar {
