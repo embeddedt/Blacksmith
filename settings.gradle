@@ -1,3 +1,5 @@
 rootProject.name = 'blacksmith'
 
 include(":java17")
+include(":launchwrapper")
+include(":main")

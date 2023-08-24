@@ -1,10 +1,17 @@
 package org.embeddedt.blacksmith.impl.hooks;
 
+import org.embeddedt.blacksmith.impl.Agent;
 import sun.net.www.protocol.jar.URLJarFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.security.CodeSource;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,5 +65,29 @@ public class Hooks {
             }
         });
         return validPaths.stream();
+    }
+
+    public static ClassLoader getClassLoaderJ9(Class<?> clz) {
+        ClassLoader oldCl = clz.getClassLoader();
+        URLClassLoader urlCl;
+        if(oldCl instanceof URLClassLoader)
+            urlCl = (URLClassLoader)oldCl;
+        else {
+            // spawn fake URLClassLoader to grab the classpath from
+            // code based off lwjgl3ify patch
+            final String cpString = System.getProperty("java.class.path");
+            final String[] cpEntries = cpString.split(File.pathSeparator);
+            URL[] classpath = new URL[cpEntries.length + 1];
+            for (int i = 0; i < cpEntries.length; i++) {
+                try {
+                    classpath[i] = new File(cpEntries[i]).toURI().toURL();
+                } catch (MalformedURLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+            classpath[classpath.length - 1] = Hooks.class.getProtectionDomain().getCodeSource().getLocation();
+            urlCl = new URLClassLoader(classpath);
+        }
+        return urlCl;
     }
 }

@@ -30,6 +30,8 @@ public class TransformerCore {
         TRANSFORMERS.add(new SJHJarTransformer());
         TRANSFORMERS.add(new AbstractModProviderTransformer());
         TRANSFORMERS.add(new LaunchClassLoaderTransformer());
+        TRANSFORMERS.add(new LaunchTransformer());
+        TRANSFORMERS.add(new FinalFieldHelperTransformer());
     }
 
     public static void log(String s) {

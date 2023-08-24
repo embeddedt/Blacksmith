@@ -1,14 +1,7 @@
 plugins {
+    id 'java-library'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
-    id 'java'
 }
-
-group 'org.embeddedt'
-archivesBaseName = 'blacksmith'
-version '1.0-SNAPSHOT'
-
-sourceCompatibility = '1.8'
-targetCompatibility = '1.8'
 
 allprojects {
     repositories {
@@ -19,35 +12,16 @@ allprojects {
             url = 'https://maven.neoforged.net/'
         }
     }
+    group 'org.embeddedt'
+    version '1.0-SNAPSHOT'
 }
 
-shadowJar {
-    relocate 'net.bytebuddy.agent', 'org.embeddedt.blacksmith.shadow.bytebuddyagent'
-    relocate 'org.objectweb.asm', 'org.embeddedt.blacksmith.shadow.asm'
-}
-
-shadowJar {
-    project.configurations.implementation.canBeResolved = true
-    configurations = [project.configurations.implementation]
-}
+project.configurations.implementation.canBeResolved = true
 
 dependencies {
-    compileOnly "net.minecraftforge:forgespi:3.2.0"
-    implementation "org.ow2.asm:asm-tree:9.1"
-    implementation "org.ow2.asm:asm-commons:9.1"
-    implementation "org.ow2.asm:asm-util:9.1"
-
-    implementation 'com.google.code.gson:gson:2.10.1'
-
-    //implementation('net.bytebuddy:byte-buddy-agent:1.12.22')
-}
-
-tasks.withType(JavaCompile) {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
-    options.encoding = "UTF-8"
+    implementation project(path: ":main", configuration: 'shadow')
+    implementation project(":java17")
+    implementation project(":launchwrapper")
 }
 
 jar {
@@ -58,7 +32,11 @@ jar {
                 "Can-Set-Native-Method-Prefix": false
         )
     }
-    from project(":java17").sourceSets.main.output
+}
+
+shadowJar {
+    project.configurations.implementation.canBeResolved = true
+    configurations = [project.configurations.implementation]
 }
 
 shadowJar {
