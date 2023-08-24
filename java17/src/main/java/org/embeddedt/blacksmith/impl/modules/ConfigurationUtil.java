@@ -49,14 +49,21 @@ public class ConfigurationUtil {
         // Readability graph
         Map<ResolvedModule, Set<ResolvedModule>> g1 = getReadabilityGraph(conf);
 
-        // Fix dependencies involving automatic modules
-        var allModules = Stream.concat(Stream.of(conf), parents.stream())
+
+        // Get a stream of all configurations, including parents
+        Stream<Configuration> allConfigurations = Stream.of(conf);
+        while(!parents.isEmpty()) {
+            allConfigurations = Stream.concat(allConfigurations, parents.stream());
+            parents = parents.stream().flatMap(c -> c.parents().stream()).distinct().collect(Collectors.toList());
+        }
+        var allModules = allConfigurations
                 .flatMap(c -> c.modules().stream())
                 .collect(Collectors.toSet());
         var allAutomaticModules = allModules.stream()
                 .filter(m -> m.reference().descriptor().isAutomatic())
                 .collect(Collectors.toSet());
 
+        // Fix dependencies involving automatic modules
         for (var module : conf.modules()) {
             if (module.reference().descriptor().isAutomatic()) {
                 // Automatic modules can read all modules
