@@ -26,8 +26,6 @@ public class ForgeHooks {
         new File("blacksmith" + File.separator + "scan_cache").mkdirs();
     }
 
-    private static final boolean USE_SCAN_CACHING = false;
-
     public static void doScanning(Object modFile, Consumer<Path> pathConsumer) {
         if(pathGetter == null) {
             try {
@@ -43,7 +41,7 @@ public class ForgeHooks {
         try {
             Path filePath = (Path)pathGetter.invoke(modFile);
             ModFileScanDataCacher.Holder holder = null;
-            if(USE_SCAN_CACHING && filePath.getFileSystem() == FileSystems.getDefault()) {
+            if(filePath.getFileSystem() == FileSystems.getDefault()) {
                 try(Reader reader = new FileReader(getPathForCacheFile(filePath))) {
                     holder = ModFileScanDataCacher.GSON.fromJson(reader, ModFileScanDataCacher.Holder.class);
                 } catch(FileNotFoundException ignored) {}
@@ -60,7 +58,7 @@ public class ForgeHooks {
     }
 
     public static void postScanning(Object modFile, ModFileScanData data) {
-        if(USE_SCAN_CACHING && cacheableModFiles.containsKey(modFile)) {
+        if(cacheableModFiles.containsKey(modFile)) {
             ModFileScanDataCacher.Holder holder = cacheableModFiles.get(modFile);
             if(holder != null) {
                 data.getClasses().addAll(holder.classes);

@@ -14,6 +14,8 @@ public class FMLScannerTransformer implements RuntimeTransformer {
         return Collections.singletonList("net/minecraftforge/fml/loading/moddiscovery/Scanner");
     }
 
+    private static final boolean USE_SCAN_CACHING = false;
+
     @Override
     public void transformClass(ClassNode data) throws IllegalClassFormatException {
         for(MethodNode method : data.methods) {
@@ -30,7 +32,7 @@ public class FMLScannerTransformer implements RuntimeTransformer {
                         }
                     }
                 }
-            } else if(method.name.equals("scan")) {
+            } else if(USE_SCAN_CACHING && method.name.equals("scan")) {
                 for(int i = 0; i < method.instructions.size(); i++) {
                     AbstractInsnNode ainsn = method.instructions.get(i);
                     if(ainsn.getOpcode() == Opcodes.INVOKEVIRTUAL) {
