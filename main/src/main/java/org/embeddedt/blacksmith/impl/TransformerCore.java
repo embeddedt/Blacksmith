@@ -36,6 +36,7 @@ public class TransformerCore {
         TRANSFORMERS.add(new LaunchTransformer());
         TRANSFORMERS.add(new FinalFieldHelperTransformer());
         TRANSFORMERS.add(new ModuleLayerHandlerTransformer());
+        TRANSFORMERS.add(new FileWatcherTransformer());
     }
 
     public static void log(String s) {
