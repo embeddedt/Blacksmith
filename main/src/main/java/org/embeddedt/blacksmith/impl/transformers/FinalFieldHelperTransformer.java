@@ -10,6 +10,8 @@ import java.util.List;
 public class FinalFieldHelperTransformer implements RuntimeTransformer {
     @Override
     public List<String> getTransformedClasses() {
+        if(System.getProperty("java.version", "").startsWith("1."))
+            return Collections.emptyList(); // Don't apply on Java 8 and lower
         return Collections.singletonList("net/minecraftforge/registries/ObjectHolderRef$FinalFieldHelper");
     }
 
