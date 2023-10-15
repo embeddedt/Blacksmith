@@ -24,13 +24,17 @@ public class AbstractModProviderTransformer implements RuntimeTransformer {
                     if (insn.getOpcode() == Opcodes.INVOKESTATIC) {
                         MethodInsnNode invokeNode = (MethodInsnNode) insn;
                         if (invokeNode.owner.equals("cpw/mods/jarhandling/SecureJar") && invokeNode.name.equals("from")) {
-                            AbstractInsnNode indyNode = invokeNode.getPrevious();
-                            while(indyNode.getOpcode() != Opcodes.INVOKEDYNAMIC) {
+                            AbstractInsnNode indyNode = invokeNode;
+                            int searchedInsns = 0;
+                            while(searchedInsns < 3 && indyNode.getOpcode() != Opcodes.INVOKEDYNAMIC) {
                                 indyNode = indyNode.getPrevious();
+                                searchedInsns++;
                             }
-                            // can't use Hooks here
-                            System.out.println("Remove pathFilter");
-                            method.instructions.set(indyNode, new MethodInsnNode(Opcodes.INVOKESTATIC, data.name, PREDICATE_METHOD, PREDICATE_DESC, false));
+                            if(searchedInsns < 3) {
+                                // can't use Hooks here
+                                System.out.println("Remove pathFilter");
+                                method.instructions.set(indyNode, new MethodInsnNode(Opcodes.INVOKESTATIC, data.name, PREDICATE_METHOD, PREDICATE_DESC, false));
+                            }
                             break;
                         }
                     }
