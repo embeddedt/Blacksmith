@@ -16,6 +16,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
@@ -42,6 +46,17 @@ public class Hooks {
 
     public static <T> Stream<T> dummyFilter(Stream<T> stream, Predicate<T> filter) {
         return stream;
+    }
+
+    public static ExecutorService makeScanningExecutor(ThreadFactory factory) {
+        int maxScanThreads = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
+        System.out.println("Using " + maxScanThreads + " threads for scanner");
+        AtomicInteger tCount = new AtomicInteger();
+        return Executors.newFixedThreadPool(maxScanThreads, r -> {
+            Thread t = factory.newThread(r);
+            t.setName("Scan-Handler-" + tCount.getAndIncrement());
+            return t;
+        });
     }
 
     public static Stream<Path> getPackagesSkippingAssets(Path basePath, FileVisitOption[] options) throws IOException {

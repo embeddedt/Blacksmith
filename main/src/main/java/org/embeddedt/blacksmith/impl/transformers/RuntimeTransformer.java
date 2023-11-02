@@ -10,13 +10,14 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.util.List;
 
 public interface RuntimeTransformer {
+    String HOOK_CLASS = "org/embeddedt/blacksmith/impl/hooks/Hooks";
     List<String> getTransformedClasses();
     void transformClass(ClassNode data) throws IllegalClassFormatException;
 
     default int getWriteFlags() { return 0; }
 
     static MethodInsnNode redirectToStaticHook(String hookName, String hookDesc) {
-        return new MethodInsnNode(Opcodes.INVOKESTATIC, "org/embeddedt/blacksmith/impl/hooks/Hooks", hookName, hookDesc, false);
+        return new MethodInsnNode(Opcodes.INVOKESTATIC, HOOK_CLASS, hookName, hookDesc, false);
     }
 
     static <T extends AbstractInsnNode> T swapInstruction(InsnList list, AbstractInsnNode oldInsn, T newInsn) {
