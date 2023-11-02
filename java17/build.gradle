@@ -7,7 +7,7 @@ java {
 }
 
 jar {
-    archiveName 'java17.jar'
+    archiveFileName.set("java17.jar")
 }
 
 dependencies {
