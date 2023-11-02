@@ -1,5 +1,6 @@
 package org.embeddedt.blacksmith.impl.transformers;
 
+import org.embeddedt.blacksmith.impl.TransformerCore;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -22,7 +23,8 @@ public class BackgroundScanHandlerTransformer implements RuntimeTransformer {
                         MethodInsnNode mNode = (MethodInsnNode)n;
                         if(mNode.name.equals("newSingleThreadExecutor")) {
                             mNode.name = "makeScanningExecutor";
-                            mNode.owner = RuntimeTransformer.HOOK_CLASS;
+                            // TODO: decide this more intelligently
+                            mNode.owner = TransformerCore.MODERN_FML ? RuntimeTransformer.HOOK17_CLASS : RuntimeTransformer.HOOK_CLASS;
                             System.out.println("Parallelized scanner");
                             break;
                         }

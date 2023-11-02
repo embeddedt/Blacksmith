@@ -48,6 +48,7 @@ public class Hooks {
         return stream;
     }
 
+    // also update implementation in Hooks17
     public static ExecutorService makeScanningExecutor(ThreadFactory factory) {
         int maxScanThreads = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
         System.out.println("Using " + maxScanThreads + " threads for scanner");

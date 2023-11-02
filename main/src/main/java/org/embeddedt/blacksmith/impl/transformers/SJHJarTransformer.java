@@ -1,5 +1,6 @@
 package org.embeddedt.blacksmith.impl.transformers;
 
+import org.embeddedt.blacksmith.impl.TransformerCore;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -18,6 +19,7 @@ public class SJHJarTransformer implements RuntimeTransformer {
 
     @Override
     public void transformClass(ClassNode data) throws IllegalClassFormatException {
+        TransformerCore.MODERN_FML = true;
         if(data.name.equals("cpw/mods/cl/JarModuleFinder")) {
             for(MethodNode method : data.methods) {
                 if(method.name.equals("<init>")) {

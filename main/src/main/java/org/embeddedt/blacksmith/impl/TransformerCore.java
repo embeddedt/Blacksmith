@@ -28,6 +28,8 @@ public class TransformerCore {
 
     private static final boolean DEBUG = Boolean.getBoolean("blacksmith.debug");
 
+    public static boolean MODERN_FML;
+
     static {
         TRANSFORMERS.add(new FMLScannerTransformer());
         TRANSFORMERS.add(new SJHJarTransformer());

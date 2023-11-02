@@ -11,6 +11,7 @@ import java.util.List;
 
 public interface RuntimeTransformer {
     String HOOK_CLASS = "org/embeddedt/blacksmith/impl/hooks/Hooks";
+    String HOOK17_CLASS = "org/embeddedt/blacksmith/impl/Hooks17";
     List<String> getTransformedClasses();
     void transformClass(ClassNode data) throws IllegalClassFormatException;
 

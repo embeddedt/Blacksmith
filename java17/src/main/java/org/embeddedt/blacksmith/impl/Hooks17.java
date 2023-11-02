@@ -6,7 +6,11 @@ import java.lang.module.Configuration;
 import java.lang.module.ModuleFinder;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("unused")
 public class Hooks17 {
@@ -31,5 +35,17 @@ public class Hooks17 {
             }
         }
         return c1;
+    }
+
+    // Also update impl in Hooks
+    public static ExecutorService makeScanningExecutor(ThreadFactory factory) {
+        int maxScanThreads = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
+        System.out.println("Using " + maxScanThreads + " threads for scanner");
+        AtomicInteger tCount = new AtomicInteger();
+        return Executors.newFixedThreadPool(maxScanThreads, r -> {
+            Thread t = factory.newThread(r);
+            t.setName("Scan-Handler-" + tCount.getAndIncrement());
+            return t;
+        });
     }
 }
