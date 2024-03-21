@@ -19,7 +19,19 @@ public class FMLScannerTransformer implements RuntimeTransformer {
     @Override
     public void transformClass(ClassNode data) throws IllegalClassFormatException {
         for(MethodNode method : data.methods) {
-            if(method.name.equals("fileVisitor")) {
+            if(method.name.equals("<clinit>")) {
+                for (int i = 0; i < method.instructions.size(); i++) {
+                    AbstractInsnNode ainsn = method.instructions.get(i);
+                    if (ainsn.getOpcode() == Opcodes.INVOKESTATIC) {
+                        MethodInsnNode minsn = (MethodInsnNode)ainsn;
+                        if(minsn.name.equals("getLogger") && minsn.owner.contains("LogUtils")) {
+                            System.out.println("Disabling scanner logging");
+                            method.instructions.set(minsn, new FieldInsnNode(Opcodes.GETSTATIC, "org/slf4j/helpers/NOPLogger", "NOP_LOGGER", "Lorg/slf4j/helpers/NOPLogger;"));
+                            break;
+                        }
+                    }
+                }
+            } else if(method.name.equals("fileVisitor")) {
                 for(int i = 0; i < method.instructions.size(); i++) {
                     AbstractInsnNode ainsn = method.instructions.get(i);
                     if(ainsn.getOpcode() == Opcodes.INVOKEVIRTUAL) {
