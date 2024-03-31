@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @SuppressWarnings("unused")
 public class LaunchWrapperTransformer implements IClassTransformer {
-    private static final boolean SHOULD_RUN = true;
+    private static final boolean SHOULD_RUN = !System.getProperty("java.version", "").startsWith("1."); // Don't apply on Java 8 or lower
     public LaunchWrapperTransformer() {
         System.out.println("Initialized Blacksmith LaunchWrapper transformer");
         try {
