@@ -4,6 +4,8 @@ import org.embeddedt.blacksmith.impl.TransformerCore;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldInsnNode;
+import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -55,6 +57,10 @@ public class SJHJarTransformer implements RuntimeTransformer {
                         }
                         insn = insn.getNext();
                     } while(insn != null);
+                } else if (method.name.equals("verifyPath") || method.name.equals("getFileStatus")) {
+                    method.instructions.clear();
+                    method.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "cpw/mods/jarhandling/SecureJar$Status", "VERIFIED", "Lcpw/mods/jarhandling/SecureJar$Status;"));
+                    method.instructions.add(new InsnNode(Opcodes.ARETURN));
                 }
             }
         }
