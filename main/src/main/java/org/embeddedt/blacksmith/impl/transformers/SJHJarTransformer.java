@@ -59,6 +59,8 @@ public class SJHJarTransformer implements RuntimeTransformer {
                     } while(insn != null);
                 } else if (method.name.equals("verifyPath") || method.name.equals("getFileStatus")) {
                     method.instructions.clear();
+                    method.localVariables.clear();
+                    method.tryCatchBlocks.clear();
                     method.instructions.add(new FieldInsnNode(Opcodes.GETSTATIC, "cpw/mods/jarhandling/SecureJar$Status", "VERIFIED", "Lcpw/mods/jarhandling/SecureJar$Status;"));
                     method.instructions.add(new InsnNode(Opcodes.ARETURN));
                 }
